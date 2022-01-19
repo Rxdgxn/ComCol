@@ -1,5 +1,4 @@
 //ComCol (aka Comment Collector) is a tool meant to remove and collect all comments from a certain file
-//TODO: separate file for removed comments
 
 use std::io::prelude::*;
 fn get_extension(f: &String) -> String {
@@ -35,8 +34,10 @@ fn main() {
 
     let single_line_keyword = get_single_line_comment(get_extension(path));
     let mut new_content = String::new();
-
     let mut new_file = std::fs::File::create(&path).expect("Failed");
+    let file_name = path.clone() + ".comm";
+    let mut comments_file = std::fs::File::create(&file_name).expect("Failed");
+    let mut comments_content = String::new();
 
     for l in split {
         let line = String::from(l.trim());
@@ -48,8 +49,16 @@ fn main() {
             new_content.push('\n');
         }
     }
-    // println!("{:?}", comments);
+    for com in comments {
+        comments_content.push_str(&com as &str);
+        comments_content.push('\n');
+    }
+
     match new_file.write_all(new_content.as_bytes()) {
+        Err(e) => panic!("{}", e),
+        Ok(_) => {}
+    }
+    match comments_file.write_all(comments_content.as_bytes()) {
         Err(e) => panic!("{}", e),
         Ok(_) => {}
     }
