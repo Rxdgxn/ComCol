@@ -1,5 +1,5 @@
 //ComCol (aka Comment Collector) is a tool meant to remove and collect all comments from a certain file
-//TODO: lines that are not only comments
+//TODO: multiple comment keywords
 use std::io::prelude::*;
 fn get_extension(f: &String) -> String {
     let mut t = String::from("");
@@ -73,8 +73,36 @@ fn main() {
                         comments.push(line.replace(multi_line_open_keyword, ""));
                     }
                     else {
-                        new_content.push_str(l);
-                        new_content.push('\n');
+                        if line.contains(&single_line_keyword) {
+                            let mut ok = true;
+                            let mut normal_line = String::from("");
+                            let mut comm_line = String::from("");
+                            let mut idx = 1;
+                            for ch in line.chars() {
+                                if ok {
+                                    normal_line.push(ch);
+                                }
+                                else {
+                                    comm_line.push(ch);
+                                }
+                                if single_line_keyword == "#" && ch == '#' {
+                                    ok = false;
+                                }
+                                else if single_line_keyword == "//" && ch == '/' && line.chars().nth(idx).unwrap() == '/' {
+                                    ok = false;
+                                }
+                                idx += 1;
+                            }
+                            new_content.push_str(&normal_line.replace('/', "") as &str);
+                            new_content.push('\n');
+                            comments.push(comm_line.replace('/', ""));
+                            // println!("{normal_line}");
+                            // println!("{comm_line}");
+                        }
+                        else {
+                            new_content.push_str(l);
+                            new_content.push('\n');
+                        }
                     }
                 }
             }
