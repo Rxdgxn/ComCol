@@ -1,5 +1,5 @@
 //ComCol (aka Comment Collector) is a tool meant to remove and collect all comments from a certain file
-//TODO: multiple comment keywords
+//TODO: dont remove comment keyword in multiline comment
 use std::io::prelude::*;
 fn get_extension(f: &String) -> String {
     let mut t = String::from("");
@@ -58,7 +58,12 @@ fn main() {
     for l in split {
         let line = String::from(l.trim());
         if line.starts_with(single_line_keyword) {
-            comments.push(line.replace(single_line_keyword, ""));
+            if single_line_keyword == "#" {
+                comments.push(line.replace(single_line_keyword, ""));
+            }
+            else {
+                comments.push(line.replace('/', ""));
+            }
         }
         else {
             if line.starts_with(multi_line_open_keyword) {
@@ -93,11 +98,16 @@ fn main() {
                                 }
                                 idx += 1;
                             }
-                            new_content.push_str(&normal_line.replace('/', "") as &str);
-                            new_content.push('\n');
-                            comments.push(comm_line.replace('/', ""));
-                            // println!("{normal_line}");
-                            // println!("{comm_line}");
+                            if single_line_keyword == "//" {
+                                new_content.push_str(&normal_line.replace('/', "") as &str);
+                                new_content.push('\n');
+                                comments.push(comm_line.replace('/', ""));
+                            }
+                            else {
+                                new_content.push_str(&normal_line.replace(single_line_keyword, "") as &str);
+                                new_content.push('\n');
+                                comments.push(comm_line.replace(single_line_keyword, ""));
+                            }
                         }
                         else {
                             new_content.push_str(l);
