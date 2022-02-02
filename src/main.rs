@@ -16,29 +16,15 @@ fn get_extension(f: &String) -> String {
 }
 fn get_single_line_comment(ext: String) -> &'static str {
     match &ext as &str {
-        "rs" | "c" | "cpp" | "java" | "js" | "ts" | "go" | "fs" | "cs" => "//",
+        "rs" | "c" | "cpp" | "java" | "js" | "ts" | "go" | "fs" | "cs" | "h" | "hpp" => "//",
         "py" => "#",
-        _ => panic!("Not implemented yet")
-    }
-}
-fn get_multi_line_open_comment(ext: String) -> &'static str {
-    match &ext as &str {
-        "rs" | "c" | "cpp" | "java" | "js" | "ts" | "go" | "fs" | "cs" => "/*",
-        "py" => "\'\'\'",
-        _ => panic!("Not implemented yet")
-    }
-}
-fn get_multi_line_close_comment(ext: String) -> &'static str {
-    match &ext as &str {
-        "rs" | "c" | "cpp" | "java" | "js" | "ts" | "go" | "fs" | "cs" => "*/",
-        "py" => "\'\'\'",
         _ => panic!("Not implemented yet")
     }
 }
 
 
 fn main() {
-    let mut comments: Vec<String> = vec![];
+    
     let mut args: Vec<String> = std::env::args().collect();
     args.remove(0);
     let path = args.first().unwrap();
@@ -46,8 +32,6 @@ fn main() {
     let split = f.split("\n");
 
     let single_line_keyword = get_single_line_comment(get_extension(path));
-    let multi_line_open_keyword = get_multi_line_open_comment(get_extension(path));
-    let multi_line_close_keyword = get_multi_line_close_comment(get_extension(path));
     let mut new_content = String::new();
     let mut new_file = std::fs::File::create(&path).expect("Failed");
     let file_name = path.clone() + ".comm";
@@ -56,78 +40,49 @@ fn main() {
     let mut opens = 0;
 
     for l in split {
-        let line = String::from(l.trim());
-        if line.starts_with(single_line_keyword) {
-            if single_line_keyword == "#" {
-                comments.push(line.replace(single_line_keyword, ""));
-            }
-            else {
-                comments.push(line.replace('/', ""));
-            }
-        }
-        else {
-            if line.starts_with(multi_line_open_keyword) {
-                opens += 1;
-            }
-            else {
-                if line.starts_with(multi_line_close_keyword) {
+        let mut end = false;
+        let mut ok = true;
+        let mut in_string = false;
+        let mut comm_line = String::new();
+        let mut new_line = String::new();
+        if single_line_keyword == "//" {
+            for (i, ch) in l.chars().enumerate() {
+                if ch == '\'' || ch == '\"' {
+                    if in_string {in_string = false;}
+                    else {in_string = true;}
+                }
+
+                if ch == '/' {
+                    if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '/' {
+                        ok = false;
+                    }
+                    else if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '*' {
+                        opens += 1;
+                    }
+                }
+                else if ch == '*' && l.chars().nth(i+1).unwrap() == '/' {
                     opens -= 1;
+                    if opens == 0 {
+                        end = true;
+                    }
+                }
+
+                if ok && opens == 0 && !end {
+                    new_line.push(ch);
                 }
                 else {
-                    if opens != 0 {
-                        comments.push(line.replace(multi_line_open_keyword, ""));
-                    }
-                    else {
-                        if line.contains(&single_line_keyword) {
-                            let mut ok = true;
-                            let mut normal_line = String::from("");
-                            let mut comm_line = String::from("");
-                            let mut idx = 1;
-                            for ch in line.chars() {
-                                if ok {
-                                    normal_line.push(ch);
-                                }
-                                else {
-                                    comm_line.push(ch);
-                                }
-                                if single_line_keyword == "#" && ch == '#' {
-                                    ok = false;
-                                }
-                                else if single_line_keyword == "//" && ch == '/' && line.chars().nth(idx).unwrap() == '/' {
-                                    ok = false;
-                                }
-                                idx += 1;
-                            }
-                            if single_line_keyword == "//" {
-                                new_content.push_str(&normal_line.replace('/', "") as &str);
-                                new_content.push('\n');
-                                while comm_line.starts_with('/') {
-                                    comm_line.remove(0);
-                                }
-                                comments.push(comm_line);
-                            }
-                            else {
-                                new_content.push_str(&normal_line.replace(single_line_keyword, "") as &str);
-                                new_content.push('\n');
-                                while comm_line.starts_with('#') {
-                                    comm_line.remove(0);
-                                }
-                                comments.push(comm_line);
-                            }
-                        }
-                        else {
-                            new_content.push_str(l);
-                            new_content.push('\n');
-                        }
-                    }
+                    comm_line.push(ch);
                 }
             }
         }
-    }
-
-    for com in comments {
-        comments_content.push_str(&com as &str);
-        comments_content.push('\n');
+        if !new_line.trim().is_empty() {
+            new_content.push_str(&new_line);
+            new_content.push('\n');
+        }
+        if !comm_line.trim().is_empty() {
+            comments_content.push_str(&comm_line);
+            comments_content.push('\n');
+        }
     }
 
     match new_file.write_all(new_content.as_bytes()) {
