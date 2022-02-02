@@ -37,11 +37,11 @@ fn main() {
     let file_name = path.clone() + ".comm";
     let mut comments_file = std::fs::File::create(&file_name).expect("Failed");
     let mut comments_content = String::new();
-    let mut opens = 0;
+    let mut open = false;
 
     for l in split {
-        let mut end = false;
         let mut ok = true;
+        let mut end = false;
         let mut in_string = false;
         let mut comm_line = String::new();
         let mut new_line = String::new();
@@ -57,17 +57,15 @@ fn main() {
                         ok = false;
                     }
                     else if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '*' {
-                        opens += 1;
+                        open = true;
                     }
                 }
                 else if ch == '*' && l.chars().nth(i+1).unwrap() == '/' {
-                    opens -= 1;
-                    if opens == 0 {
-                        end = true;
-                    }
+                    open = false;
+                    end = true;
                 }
 
-                if ok && opens == 0 && !end {
+                if ok && !open && !end{
                     new_line.push(ch);
                 }
                 else {
@@ -77,6 +75,9 @@ fn main() {
         }
         if !new_line.trim().is_empty() {
             new_content.push_str(&new_line);
+            new_content.push('\n');
+        }
+        if l.trim().is_empty() {
             new_content.push('\n');
         }
         if !comm_line.trim().is_empty() {
