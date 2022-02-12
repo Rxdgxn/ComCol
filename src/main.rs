@@ -2,7 +2,7 @@
 
 use std::io::prelude::*;
 fn get_extension(f: &String) -> String {
-    let mut t = String::from("");
+    let mut t = String::new();
     let mut ok = false;
     for ch in f.chars() {
         if ok {
@@ -48,24 +48,44 @@ fn main() {
         if single_line_keyword == "//" {
             for (i, ch) in l.chars().enumerate() {
                 if ch == '\'' || ch == '\"' {
-                    if in_string {in_string = false;}
-                    else {in_string = true;}
+                    in_string = !in_string;
                 }
 
                 if ch == '/' {
-                    if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '/' {
+                    if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '/' && !in_string {
                         ok = false;
                     }
-                    else if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '*' {
+                    else if i+1 != l.len() && l.chars().nth(i+1).unwrap() == '*' && !in_string {
                         open = true;
                     }
                 }
-                else if ch == '*' && l.chars().nth(i+1).unwrap() == '/' {
-                    open = false;
-                    end = true;
+                else if ch == '*' && i+1 != l.len() {
+                    if l .chars().nth(i+1).unwrap() == '/' && !in_string {
+                        open = false;
+                        end = true;
+                    }
                 }
 
-                if ok && !open && !end{
+                if ok && !open && !end {
+                    new_line.push(ch);
+                }
+                else {
+                    comm_line.push(ch);
+                }
+            }
+        }
+        else if single_line_keyword == "#" {
+            for (_, ch) in l.chars().enumerate() {
+                if ch == '\'' || ch == '\"' {
+                    in_string = !in_string;
+                }
+
+                if ch == '#' && !in_string {
+                    ok = false;
+                }
+                //TODO
+
+                if ok && !open {
                     new_line.push(ch);
                 }
                 else {
