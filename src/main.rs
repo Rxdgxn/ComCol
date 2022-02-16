@@ -40,6 +40,7 @@ fn main() {
     let mut open = false;
 
     for l in split {
+        let l = &l.replace('\r', "") as &str;
         let mut ok = true;
         let mut end = false;
         let mut in_string = false;
@@ -75,7 +76,7 @@ fn main() {
             }
         }
         else if single_line_keyword == "#" {
-            for (_, ch) in l.chars().enumerate() {
+            for (i, ch) in l.chars().enumerate() {
                 if ch == '\'' || ch == '\"' {
                     in_string = !in_string;
                 }
@@ -83,7 +84,22 @@ fn main() {
                 if ch == '#' && !in_string {
                     ok = false;
                 }
-                //TODO
+                
+                if l.len() >= 3 && i <= l.len() - 3 {
+                    if ch == '\'' && l.chars().nth(i+1).unwrap() == '\'' && l.chars().nth(i+2).unwrap() == '\'' && !open {
+                        open = true;
+                    }
+                    else if ch == '\'' && l.chars().nth(i+1).unwrap() == '\'' && l.chars().nth(i+2).unwrap() == '\'' && open {
+                        end = true;
+                    }
+
+                    if ch == '\"' && l.chars().nth(i+1).unwrap() == '\"' && l.chars().nth(i+2).unwrap() == '\"' && !open {
+                        open = true;
+                    }
+                    else if ch == '\"' && l.chars().nth(i+1).unwrap() == '\"' && l.chars().nth(i+2).unwrap() == '\"' && open {
+                        end = true;
+                    }
+                }
 
                 if ok && !open {
                     new_line.push(ch);
@@ -92,6 +108,9 @@ fn main() {
                     comm_line.push(ch);
                 }
             }
+        }
+        if end {
+            open = false;
         }
         if !new_line.trim().is_empty() {
             new_content.push_str(&new_line);
