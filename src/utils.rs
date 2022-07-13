@@ -85,8 +85,6 @@ pub fn process_line(l: &str, com: &mut String, nl: &mut String, max: usize, mut 
                 let tup = process_line(&l[l.find(closed_key).unwrap()+closed_key.len()..l.len()], com, nl, max, false, in_string, single_key, open_key, closed_key);
                 in_comment = tup.0;
                 in_string = tup.1;
-                // in_comment = process_line(&l[l.find(closed_key).unwrap()+closed_key.len()..l.len()], com, nl, max, false, in_string, single_key, open_key, closed_key).0;
-                // in_string = process_line(&l[l.find(closed_key).unwrap()+closed_key.len()..l.len()], com, nl, max, false, in_string, single_key, open_key, closed_key).1;
             }
             else if l.contains(closed_key) && l.contains(single_key) {
                 if l.find(closed_key).unwrap() < l.find(single_key).unwrap() {
@@ -101,9 +99,6 @@ pub fn process_line(l: &str, com: &mut String, nl: &mut String, max: usize, mut 
             }
 
         }
-
-
-        // ...
     }
     else if !line.is_empty() {
         if !in_comment {
@@ -117,53 +112,3 @@ pub fn process_line(l: &str, com: &mut String, nl: &mut String, max: usize, mut 
     }
     (in_comment, in_string)
 }
-
-// for i in 0..l.len()-max_len {
-
-            //     if in_comment {
-            //         com_file_content.push_str(&l[pos_open..l.len()]);
-            //         pos_open = 0;
-            //     }
-            //     else {
-            //         if !com_closed {
-            //             com_file_content.push_str(&l[0..pos_closed]);
-            //             com_closed = true;
-            //         }
-            //     }
-
-            //     if &l[i..=i] == "\"" {
-            //         if i != 0 {
-            //             if &l[i-1..=i-1] != "\\" {
-            //                 in_string = !in_string;
-            //             }
-            //         }
-            //         else {
-            //             in_string = !in_string;
-            //         }
-            //     }
-                // if keys.contains(&&l[i..i+max_len]) && !in_string {
-                //     if l[i..i+max_len].contains(&single_key) {
-                //         com_file_content.push_str(&l[i..l.len()]);
-                //         com_file_content.push('\n');
-                //         break;
-                //     }
-                //     else if l[i..i+max_len].contains(&open_key) {
-                //         in_comment = true;
-                //         pos_open = i + l.find(open_key).unwrap();
-                //     }
-                //     else if l[i..i+max_len].contains(&closed_key) {
-                //         in_comment = false;
-                //         pos_closed = i + l.find(closed_key).unwrap();
-                //         com_closed = false;
-                //     }
-
-                // }
-                // else if in_string {
-                //     if i == l.len() - single_key.len() - 1 {
-                //         curr_file_line.push_str(&l[i..=i+single_key.len()]);
-                //     }
-                //     else {
-                //         curr_file_line.push_str(&l[i..=i]);
-                //     }
-                // }
-            // }

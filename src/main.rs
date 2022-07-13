@@ -1,7 +1,7 @@
 // ComCol (aka Comment Collector) is a tool meant to remove and collect all comments from a certain file
 // TODO: in_string
-mod utils;
 
+mod utils;
 use utils::*;
 
 fn main() {
