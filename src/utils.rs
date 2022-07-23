@@ -36,78 +36,73 @@ pub fn get_extension(src: &str) -> &str {
     &src[find_dot(src)+1..src.len()]
 }
 
+pub fn write_to(src: &mut String, to_write: &str) {
+    src.push_str(to_write);
+    src.push('\n');
+}
+
 pub fn process_line(l: &str, com: &mut String, nl: &mut String, max: usize, mut in_comment: bool, mut in_string: bool, single_key: &str, open_key: &str, closed_key: &str) -> (bool, bool) {
     let line = l.trim();
     if !line.is_empty() && line.len() >= max {
-
-        if l.contains('\"') {
-            if l.find('\"').unwrap() != 0 {
-                if &l[l.find('\"').unwrap()-1..=l.find('\"').unwrap()-1] != "\\" {
-                    in_string = !in_string;
-                }
-            }
-            else {
-                in_string = !in_string;
-            }
-        }
+        // in_string
 
         if !in_comment {
-            if line.contains(single_key) && !l.contains(open_key) {
-                nl.push_str(&l[0..l.find(single_key).unwrap()]);
-                nl.push('\n');
-                com.push_str(&l[l.find(single_key).unwrap()..l.len()]);
-                com.push('\n');
-            }
-            else if l.contains(single_key) && l.contains(open_key) {
-                if l.find(open_key).unwrap() < l.find(single_key).unwrap() {
+            if !in_string {
+                if line.contains(single_key) && !l.contains(open_key) {
+                    write_to(nl, &l[0..l.find(single_key).unwrap()]);
+                    write_to(com, &l[l.find(single_key).unwrap()..l.len()]);
+                    return (in_comment, in_string);
+                }
+                else if l.contains(single_key) && l.contains(open_key) {
+                    if l.find(open_key).unwrap() < l.find(single_key).unwrap() {
+                        in_comment = true;
+                    }
+                    else {
+                        write_to(nl, &l[0..l.find(single_key).unwrap()]);
+                        write_to(com, &l[l.find(single_key).unwrap()..l.len()]);
+                    }
+                }
+                else if !l.contains(single_key) && l.contains(open_key) {
                     in_comment = true;
+                    write_to(nl, &l[0..l.find(open_key).unwrap()]);
+                    write_to(com, &l[l.find(open_key).unwrap()..l.len()]);
+                }
+                else if l.contains(open_key) && l.contains(closed_key) {
+                    write_to(nl, &l[0..l.find(open_key).unwrap()]);
+                    write_to(com, &l[l.find(open_key).unwrap()..l.find(closed_key).unwrap()+closed_key.len()]);
+                    write_to(nl, &l[l.find(closed_key).unwrap()+closed_key.len()..l.len()]);
                 }
                 else {
-                    nl.push_str(&l[0..l.find(single_key).unwrap()]);
-                    nl.push('\n');
-                    com.push_str(&l[l.find(single_key).unwrap()..l.len()]);
-                    com.push('\n');
+                    nl.push_str(&l);
                 }
-            }
-            else if !l.contains(single_key) && l.contains(open_key) {
-                in_comment = true;
-                com.push_str(&l[l.find(open_key).unwrap()..l.len()]);
-                com.push('\n');
-            }
-            else {
-                nl.push_str(&l);
             }
         }
         else {
-            if l.contains(closed_key) && !l.contains(single_key) {
-                com.push_str(&l[0..l.find(closed_key).unwrap()+closed_key.len()]);
-                com.push('\n');
-                let tup = process_line(&l[l.find(closed_key).unwrap()+closed_key.len()..l.len()], com, nl, max, false, in_string, single_key, open_key, closed_key);
-                in_comment = tup.0;
-                in_string = tup.1;
-            }
-            else if l.contains(closed_key) && l.contains(single_key) {
-                if l.find(closed_key).unwrap() < l.find(single_key).unwrap() {
-                    in_comment = false;
-                    com.push_str(&l[0..l.find(closed_key).unwrap()+closed_key.len()]);
-                    com.push('\n');
+            if !in_string {
+                if l.contains(closed_key) && !l.contains(single_key) {
+                    write_to(com, &l[0..l.find(closed_key).unwrap()+closed_key.len()]);
+                    let tup = process_line(&l[l.find(closed_key).unwrap()+closed_key.len()..l.len()], com, nl, max, false, in_string, single_key, open_key, closed_key);
+                    in_comment = tup.0;
+                    in_string = tup.1;
+                }
+                else if l.contains(closed_key) && l.contains(single_key) {
+                    if l.find(closed_key).unwrap() < l.find(single_key).unwrap() {
+                        in_comment = false;
+                        write_to(com, &l[0..l.find(closed_key).unwrap()+closed_key.len()]);
+                    }
+                }
+                else {
+                    write_to(com, &l);
                 }
             }
-            else {
-                com.push_str(&l);
-                com.push('\n');
-            }
-
         }
     }
     else if !line.is_empty() {
         if !in_comment {
-            nl.push_str(&l);
-            nl.push('\n');
+            write_to(nl, &l);
         }
         else {
-            com.push_str(&l);
-            com.push('\n');
+            write_to(com, &l);
         }
     }
     (in_comment, in_string)

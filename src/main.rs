@@ -1,5 +1,4 @@
 // ComCol (aka Comment Collector) is a tool meant to remove and collect all comments from a certain file
-// TODO: in_string
 
 mod utils;
 use utils::*;
@@ -31,7 +30,11 @@ fn main() {
     }
 
 
-    println!("{}", com_file_content);
-    println!("--------------------");
-    println!("{}", new_file_content);
+    // println!("{}", com_file_content);
+    // println!("--------------------");
+    // println!("{}", new_file_content);
+
+    std::fs::write(path, new_file_content).expect("Failed");
+    std::fs::write(path.to_owned() + ".comm", com_file_content).expect("Failed");
+
 }
