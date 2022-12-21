@@ -47,8 +47,9 @@ pub fn process_line(line: &str, ext: &str) -> (Option<String>, Option<String>) {
     let mut fq = 0usize;
     let tok_zones: Vec<usize> = line.match_indices(sgtok).map(|(i, _)|i).collect();
     let mut string_zones: Vec<(usize, usize)> = Vec::new();
+    let mut last_position = 0usize;
     let mut found_sgtok = false;
-    let mut sgtok_position = 0usize; // Default value
+    let mut sgtok_pos = 0usize;
 
     for (i, ch) in line.chars().enumerate() {
         if ch == '\"' {
@@ -70,17 +71,25 @@ pub fn process_line(line: &str, ext: &str) -> (Option<String>, Option<String>) {
         }
     }
 
-    for tzone in &tok_zones {
+    for tok in &tok_zones {
+        let mut ok = true;
         for szones in &string_zones {
-            if *tzone < szones.0 {
-                found_sgtok = true;
-                sgtok_position = *tzone;
+            last_position = *tok;
+            if *tok > szones.0 && *tok < szones.1 {
+                ok = false;
                 break;
             }
         }
+        if ok {
+            found_sgtok = true;
+            sgtok_pos = last_position;
+            break;
+        }
     }
+
+
     if !found_sgtok {
-        return (Some("".to_string()), Some(line.to_string()));
+        return (Some(line.to_string()), Some("".to_string()));
     }
-    (Some(line[0..sgtok_position].to_string()), Some(line[sgtok_position+sgtok.len()..line.len()].to_string()))
+    (Some(line[0..sgtok_pos].to_string()), Some(line[sgtok_pos+sgtok.len()..line.len()].to_string()))
 }
