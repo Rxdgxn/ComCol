@@ -41,7 +41,7 @@ pub fn write_to(src: &mut String, to_write: &str) {
     src.push('\n');
 }
 
-pub fn process_line(line: &str, ext: &str) -> (Option<String>, Option<String>) {
+pub fn process_line(line: &str, ext: &str) -> (String, String) {
     let sgtok = get_single_line_comment(ext);
     let mut matched = true;
     let mut fq = 0usize;
@@ -80,16 +80,20 @@ pub fn process_line(line: &str, ext: &str) -> (Option<String>, Option<String>) {
                 break;
             }
         }
-        if ok {
+        if ok && !string_zones.is_empty() {
             found_sgtok = true;
             sgtok_pos = last_position;
             break;
         }
+        else if ok && string_zones.is_empty() {
+            found_sgtok = true;
+            sgtok_pos = *tok;
+            break;
+        }
     }
-
 
     if !found_sgtok {
-        return (Some(line.to_string()), Some("".to_string()));
+        return (line.to_string(), "".to_string());
     }
-    (Some(line[0..sgtok_pos].to_string()), Some(line[sgtok_pos+sgtok.len()..line.len()].to_string()))
+    (line[0..sgtok_pos].to_string(), line[sgtok_pos+sgtok.len()..line.len()].to_string())
 }
