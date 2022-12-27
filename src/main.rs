@@ -11,9 +11,11 @@ fn main() {
     let extension = get_extension(&path);
     let mut new_file_content = String::new();
     let mut com_file_content = String::new();
+    let mut matched = true;
+    let mut in_comment = false;
     
     for l in file.split("\n") {
-        let tup = process_line(l, extension);
+        let tup = process_line(l, extension, &mut matched, &mut in_comment);
         if !tup.0.is_empty() || (tup.0.is_empty() && tup.1.is_empty())  {
             write_to(&mut new_file_content, &tup.0);
         }
