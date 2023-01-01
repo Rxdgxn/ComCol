@@ -23,12 +23,7 @@ fn main() {
             write_to(&mut com_file_content, &tup.1);
         }
     }
-
-    if !new_file_content.is_empty() {
-        std::fs::write(path, &new_file_content[0..new_file_content.len()-1]).expect("Failed");
-    }
-    if !com_file_content.is_empty() {
-        std::fs::write(path.to_owned() + ".comm", &com_file_content[0..com_file_content.len()-1]).expect("Failed");
-    }
+    std::fs::write(path, &new_file_content[0..new_file_content.len()-1]).expect("Failed");
+    std::fs::write(path.to_owned() + ".comm", &com_file_content[0..com_file_content.len()-1]).expect("Failed");
 
 }

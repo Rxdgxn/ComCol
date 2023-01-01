@@ -77,8 +77,6 @@ pub fn process_line(line: &str, ext: &str, matched: &mut bool, in_comment: &mut 
         let tok_zones = merge(tok_zones, optok_zones);
         let mut string_zones: Vec<(usize, usize)> = Vec::new();
         let mut last_position = 0usize;
-        let mut found_sgtok = false;
-        let mut sgtok_pos = 0usize;
 
         for (i, ch) in line.chars().enumerate() {
             if ch == '\"' {
@@ -109,29 +107,56 @@ pub fn process_line(line: &str, ext: &str, matched: &mut bool, in_comment: &mut 
                     break;
                 }
             }
-            // TODO: actually chek for optok + refactoring
             if ok && !string_zones.is_empty() {
-                found_sgtok = true;
-                sgtok_pos = last_position;
-                break;
+                if last_position + std::cmp::max(optok.len(), sgtok.len()) >= line.len() {
+                    if optok.len() > sgtok.len() || (optok.len() == sgtok.len() && &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == sgtok) {
+                        return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
+                    }
+                    else if optok.len() < sgtok.len() || (optok.len() == sgtok.len() && &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == optok) {
+                        *in_comment = true;
+                        return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
+                    }
+                }
+                else {
+                    if &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == sgtok {
+                        return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
+                    }
+                    else if &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == optok {
+                        *in_comment = true;
+                        return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
+                    }
+                }
             }
             else if ok && string_zones.is_empty() {
-                found_sgtok = true;
-                sgtok_pos = *tok;
-                break;
+                if *tok + std::cmp::max(optok.len(), sgtok.len()) >= line.len() {
+                    if optok.len() > sgtok.len() || (optok.len() == sgtok.len() && &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == sgtok) {
+                        return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
+                    }
+                    else if optok.len() < sgtok.len() || (optok.len() == sgtok.len() && &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == optok) {
+                        *in_comment = true;
+                        return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
+                    }
+                }
+                else {
+                    if &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == sgtok {
+                        return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
+                    }
+                    else if &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == optok {
+                        *in_comment = true;
+                        return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
+                    }
+                }
             }
         }
-
-        if !found_sgtok {
-            return (line.to_string(), "".to_string());
-        }
-        return (line[0..sgtok_pos].to_string(), line[sgtok_pos+sgtok.len()..line.len()].to_string());
+        return (line.to_string(), "".to_string());
     }
     if !line.contains(cltok) {
         ("".to_string(), line.to_string())
     }
     else {
         let cltok_pos = line.find(cltok).unwrap();
-        (line[0..cltok_pos].to_string(), line[cltok_pos+cltok.len()..line.len()].to_string())
+        *in_comment = false;
+        // TODO: Continue to look at the rest of the line
+        (line[cltok_pos+cltok.len()..line.len()].to_string(), line[0..cltok_pos].to_string())
     }
 }
