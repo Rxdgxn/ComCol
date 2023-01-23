@@ -118,10 +118,10 @@ pub fn process_line(line: &str, ext: &str, matched: &mut bool, in_comment: &mut 
                     }
                 }
                 else {
-                    if &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == sgtok {
+                    if &line[last_position..last_position+sgtok.len()] == sgtok {
                         return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
                     }
-                    else if &line[tok_zones[last_position]..tok_zones[last_position]+sgtok.len()] == optok {
+                    else if &line[last_position..last_position+optok.len()] == optok {
                         *in_comment = true;
                         return (line[0..last_position].to_string(), line[last_position+sgtok.len()..line.len()].to_string());
                     }
@@ -138,10 +138,10 @@ pub fn process_line(line: &str, ext: &str, matched: &mut bool, in_comment: &mut 
                     }
                 }
                 else {
-                    if &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == sgtok {
+                    if &line[*tok..(*tok)+sgtok.len()] == sgtok {
                         return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
                     }
-                    else if &line[tok_zones[*tok]..tok_zones[*tok]+sgtok.len()] == optok {
+                    else if &line[*tok..(*tok)+optok.len()] == optok {
                         *in_comment = true;
                         return (line[0..*tok].to_string(), line[*tok+sgtok.len()..line.len()].to_string());
                     }
@@ -156,7 +156,7 @@ pub fn process_line(line: &str, ext: &str, matched: &mut bool, in_comment: &mut 
     else {
         let cltok_pos = line.find(cltok).unwrap();
         *in_comment = false;
-        // TODO: Continue to look at the rest of the line
+        // TODO: Continue to look at the rest of the line: ... /*___*/ ...
         (line[cltok_pos+cltok.len()..line.len()].to_string(), line[0..cltok_pos].to_string())
     }
 }
